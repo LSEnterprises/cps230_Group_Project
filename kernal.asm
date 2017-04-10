@@ -41,20 +41,18 @@ yeild:
 	pusha
 begin:
 	mov		bx, [cur_task]
-	dec		bx
-	imul	word bx, 2
-	add		bx, [task_stacks]
+	imul	bx, 2
+	add		bx, task_stacks
 	mov		[bx], sp
-	inc		word [cur_task]
 	
-	cmp		word [cur_task], 3
+	add		word [cur_task], 1
+	cmp		word [cur_task], 2
 	jne		.good
-	mov		word [cur_task], 1
+	mov		word [cur_task], 0
 .good:
 	mov		bx, [cur_task]
-	dec		bx
-	imul	word bx, 2
-	add		bx, [task_stacks]
+	imul	bx, 2
+	add		bx, task_stacks
 	mov		sp, [bx]
 	
 	popa
@@ -62,13 +60,13 @@ begin:
 	
 task1:
 	mov		al, '1'
-	mov	ah, 0x0e
+	mov		ah, 0x0e
 	int		0x10
 	call	yeild
 	jmp		task1
 task2:
 	mov		al, '2'
-	mov	ah, 0x0e
+	mov		ah, 0x0e
 	int		0x10
 	call	yeild
 	jmp		task2
