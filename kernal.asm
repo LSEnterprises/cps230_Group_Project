@@ -39,14 +39,15 @@ start:
 	
 yeild:
 	pusha
-begin:
+
 	mov		bx, [cur_task]
 	imul	bx, 2
 	add		bx, task_stacks
 	mov		[bx], sp
 	
 	add		word [cur_task], 1
-	cmp		word [cur_task], 2
+	mov		ax, [cur_task]
+	cmp		ax, 2
 	jne		.good
 	mov		word [cur_task], 0
 .good:
@@ -55,6 +56,7 @@ begin:
 	add		bx, task_stacks
 	mov		sp, [bx]
 	
+begin:
 	popa
 	ret
 	
@@ -70,9 +72,10 @@ task2:
 	int		0x10
 	call	yeild
 	jmp		task2
+	
 section .data
 
-cur_task	dw	0
+cur_task	dw	1
 
 task_stacks	times 2		dw	0 ; Array of task stack pointers
 
