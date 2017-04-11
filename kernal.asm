@@ -6,9 +6,11 @@ section .text
 
 start:
 	
-	mov		ax, [t1_stack + 256]
+	mov		ax, t1_stack
+	add		ax, 256
 	mov		[task_stacks + 0*2], ax
-	mov		ax, [t2_stack + 256]
+	mov		ax, t2_stack
+	add		ax, 256
 	mov		[task_stacks + 1*2], ax
 	
 	mov		sp, [task_stacks + 0*2]
@@ -34,8 +36,6 @@ start:
 	push	word 0
 	
 	jmp		begin
-	
-	ret
 	
 yeild:
 	pusha
