@@ -52,7 +52,8 @@ start: ; stack setup
 	; reenable interrupts (GO!)
 	sti
 	
-	jmp		begin
+	popa		; I do not want to jump into the yield function because
+	iret		; I do not want to execute the default int 8 handler
 	
 ; stack to push to in sp
 ; begining address of the task in dx
