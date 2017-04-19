@@ -53,6 +53,8 @@ start: ; stack setup
 	sti
 	
 	popa		; I do not want to jump into the yield function because
+	pop		es
+	pop		ds
 	iret		; I do not want to execute the default int 8 handler
 	
 ; stack to push to in sp
@@ -66,6 +68,8 @@ create_stack:
 	pushf				; flags 
 	push	word cx		; segment of the task
 	push	word dx		; offset of the task
+	push	word ds
+	push	word es
 	push	word 0
 	push	word 0
 	push	word 0
@@ -79,6 +83,8 @@ create_stack:
 	ret
 yield:
 	cli
+	push	word ds
+	push	word es
 	pusha
 	
 	mov		bx, [cs:cur_task]
@@ -100,6 +106,8 @@ yield:
 	
 begin:
 	popa
+	pop		es
+	pop		ds
 	sti
 	jmp	far [cs:ivt8_offset]
 	
