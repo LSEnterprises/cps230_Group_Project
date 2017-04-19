@@ -50,7 +50,6 @@ start: ; stack setup
 	mov		ax, cs
 	mov		[es:IVT8_SEGMENT_SLOT], ax
 	; reenable interrupts (GO!)
-	sti
 	
 	popa		; I do not want to jump into the yield function because
 	pop		es
@@ -108,7 +107,6 @@ begin:
 	popa
 	pop		es
 	pop		ds
-	sti
 	jmp	far [cs:ivt8_offset]
 	
 task0:
