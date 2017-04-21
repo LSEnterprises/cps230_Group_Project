@@ -426,6 +426,11 @@ stack3		times 256	db	0
 ivt8_offset	dw	0
 ivt8_segment	dw	0
 
+; video memory starting points.
+video_t0				dw	CpR + 0*(CpR*2), CpR + 1*(CpR*2),  CpR + 2*(CpR*2),  CpR + 3*(CpR*2),  CpR + 4*(CpR*2),  CpR + 5*(CpR*2), CpR + 6*(CpR*2),  CpR + 7*(CpR*2)
+video_t1				dw	CpR + 8*(CpR*2), CpR + 9*(CpR*2),  CpR + 10*(CpR*2),  CpR + 11*(CpR*2),  CpR + 12*(CpR*2),  CpR + 13*(CpR*2), CpR + 14*(CpR*2),  CpR + 15*(CpR*2)
+video_t2				dw	CpR + 16*(CpR*2), CpR + 17*(CpR*2),  CpR + 18*(CpR*2),  CpR + 19*(CpR*2),  CpR + 20*(CpR*2),  CpR + 21*(CpR*2), CpR + 22*(CpR*2),  CpR + 23*(CpR*2)
+
 ; rpn
 RPN_stack				times	100 dw 0; ; reserve 100 [word] size spaces, all 0 by default
 RPN_sp					dw 	0 ; stack pointer for the RPN stack
