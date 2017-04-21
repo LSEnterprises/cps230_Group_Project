@@ -2,6 +2,11 @@ bits	16
 
 org		0
 
+CpR	equ	80	; 80 characters per row
+RpS	equ	25	; 25 rows per screen
+BpC	equ	2	; 2 bytes per character
+ 
+
 IVT8_OFFSET_SLOT	equ	4 * 8			; Each IVT entry is 4 bytes; this is the 8th
 IVT8_SEGMENT_SLOT	equ	IVT8_OFFSET_SLOT + 2	; Segment after Offset
 
@@ -49,7 +54,15 @@ start: ; stack setup
 	mov		[es:IVT8_OFFSET_SLOT], ax
 	mov		ax, cs
 	mov		[es:IVT8_SEGMENT_SLOT], ax
-	; reenable interrupts (GO!)
+	
+	; set PIT timer
+	mov		al, 0x36
+	out		0x43, al    ;tell the PIT which channel we're setting
+
+	mov		ax, 4972		; 240 hz 1193182 / 240 = 4972
+	out		0x40, al    ;send low byte
+	mov		al, ah
+	out		0x40, al    ;send high byte
 	
 	popa		; I do not want to jump into the yield function because
 	pop		es
