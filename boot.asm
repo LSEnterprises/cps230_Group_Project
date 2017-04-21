@@ -17,6 +17,8 @@ org	0x7C00
 start:	jmp	main
 
 ; Embedded data
+clear		times 25	db	13, 10 ; clear screen
+		db	0
 boot_msg	db	"CpS 230 Group Project", 13, 10
 		db	"by Abraham Steenhoek and Andrew Price", 13, 10, 0
 boot_disk	db	0		; Variable to store the number of the disk we boot from
@@ -35,12 +37,16 @@ main:
 	; TODO: Set SP == 0x0000 (stack pointer starts at the TOP of segment; first push decrements by 2, to 0xFFFE)
 	mov		sp, 0x0000
 	; TODO: Print the boot message/banner
+	; clear screen
+	mov		dx, clear
+	call	puts
+	
 	mov		dx, boot_msg
 	call	puts
 	; TODO: use BIOS raw disk I/O to load sector 2 from disk number <boot_disk> into memory at 0800:0000h (retry on failure)
 read:
 	mov		ah, 2
-	mov		al, 3
+	mov		al, 4 ; sector amounts
 	mov		ch, 0
 	mov		cl, 2
 	mov		dh, 0
@@ -62,6 +68,10 @@ success:
 	call	puts
 	mov		ah, 0
 	int		16h
+	
+	; clear screen
+	mov		dx, clear
+	call	puts
 	
 	mov		ax, 0x0800
 	mov		ds, ax
