@@ -216,6 +216,10 @@ clear_section:
 	
 ; bx is the screen to print to
 ; si is the image to print
+; cx is x to print at
+; di is y to print at
+; ax is the image hieght
+; bx is the image width
 draw_image:
 	; clear the screen
 	push	cx ;x
@@ -258,6 +262,7 @@ draw_image:
 	
 ; bx start
 ; ax line
+; dx line length
 print_line:
 	push	dx
 	push	bx
