@@ -142,24 +142,28 @@ task0:
 	call	draw_image
 	jmp		task0
 task1:
-	mov		bx, 0xb800
-	mov		es, bx
-	
-	mov		bx, [video_t1 + 8]
-	add		bx, 78
-	
-	mov		al, '1'
-	mov		ah, 0x0F
-	mov		[es:bx], ax
-	
+	mov		cx, -19			; display x coord
+.top:
+	mov		ax, 0
+.spin:
+	cmp		ax, 2000
+	je		.no_spin
+	inc		ax
+	jmp		.spin
+.no_spin:
 	mov		si, fishies_img	; the image to display on the screen
-	mov		cx, 1			; display x coord
 	mov		di, 1			; display y coord
 	mov		ax, 5			; image hieght
 	mov		dx, 20			; image width
 	mov		bx, video_t1	; screen to display the image on
 	call	draw_image
-	jmp		task1
+	
+	inc		cx
+	cmp		cx, 20
+	jle		.no_reset
+	mov		cx, -19
+.no_reset:
+	jmp		.top
 task2:
 	mov		bx, 0xb800
 	mov		es, bx
