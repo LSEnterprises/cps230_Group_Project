@@ -59,7 +59,7 @@ start: ; stack setup
 	mov		al, 0x36
 	out		0x43, al    ;tell the PIT which channel we're setting
 
-	mov		ax, 4972		; 240 hz 1193182 / 240 = 4972
+	mov		ax, 4972		; 60 hz 1193182 / 60 = 19886
 	out		0x40, al    ;send low byte
 	mov		al, ah
 	out		0x40, al    ;send high byte
@@ -126,36 +126,167 @@ task0:
 	mov		bx, 0xb800
 	mov		es, bx
 	
+	mov		bx, [video_t0 + 8]
+	add		bx, 78
+	
 	mov		al, '0'
 	mov		ah, 0x0F
-	mov		[es:80], ax
+	mov		[es:bx], ax
 	
-	mov		ah, 0x00
-	mov		[es:80], ax
+	mov		si, image_t0	; the image to display on the screen
+	mov		cx, 5			; display x coord
+	mov		di, 5			; display y coord
+	mov		ax, 2			; image hieght
+	mov		dx, 2			; image width
+	mov		bx, video_t0	; screen to display the image on
+	call	draw_image
 	jmp		task0
 task1:
 	mov		bx, 0xb800
 	mov		es, bx
 	
+	mov		bx, [video_t1 + 8]
+	add		bx, 78
+	
 	mov		al, '1'
 	mov		ah, 0x0F
-	mov		[es:240], ax
+	mov		[es:bx], ax
 	
-	mov		ah, 0x00
-	mov		[es:240], ax
+	mov		bx, video_t1
+	call	clear_section
 	jmp		task1
 task2:
 	mov		bx, 0xb800
 	mov		es, bx
 	
+	mov		bx, [video_t2 + 8]
+	add		bx, 78
+	
 	mov		al, '2'
 	mov		ah, 0x0F
-	mov		[es:400], ax
+	mov		[es:bx], ax
 	
-	mov		ah, 0x00
-	mov		[es:400], ax
+	mov		bx, video_t2
+	call	clear_section
 	jmp		task2
-task3:
+	
+; takes a screen pointer in bx
+; clears it to black
+clear_section:
+	push	es
+	push	ax
+	push	cx
+	push	di
+	
+	
+	mov	ax, 0xb800
+	mov	es, ax
+	
+	mov		al, 0
+	mov		cx, 80
+	mov		di, [bx + 0]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 2]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 4]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 6]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 8]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 10]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 12]
+	rep	stosb
+	mov		cx, 80
+	mov		di, [bx + 14]
+	rep	stosb
+	
+	pop		di
+	pop		cx
+	pop		ax
+	pop		es
+	ret
+	
+; bx is the screen to print to
+; si is the image to print
+draw_image:
+	; clear the screen
+	push	cx ;x
+	push	di ;y
+	push	ax ;hieght
+	push	dx ;width
+	push	bx ;screen
+	
+	; makes background black
+	call	clear_section
+	
+	; video memory is 2 bytes per slot so multiplying x and y by 2
+	imul	cx, 2
+	imul	di, 2
+	
+	; set screen to start at (x,y)
+	add		bx, di
+	mov		bx, [bx]
+	add		bx, cx
+	
+	; set di to the hieght variable
+	mov		di, ax
+	
+.top:
+	mov		ax, [si]
+	call	print_line
+	
+	add		bx, 160		;new line in memory
+	add		si, 2		;new line image
+	dec		di
+	cmp		di, 0
+	jne		.top
+	
+	pop		bx ;screen
+	pop		dx ;hieght
+	pop		ax ;width
+	pop		di ;y
+	pop		cx ;x
+	ret
+	
+; bx start
+; ax line
+print_line:
+	push	dx
+	push	bx
+	push	si
+	push	ax
+	push	es
+	mov		si, ax
+	
+	mov		ax, 0xb800
+	mov		es, ax
+	
+.top:
+	mov		ax, [si]
+	mov		[es:bx], ax
+	
+	add		si, 2
+	add		bx, 2
+	dec		dx
+	cmp		dx, 0
+	jne		.top
+	
+	pop		es
+	pop		ax
+	pop		si
+	pop		bx
+	pop		dx
+	ret
+	
+task3:								; RPN
 	mov dx, str_prompt
 	call puts
 	
@@ -423,8 +554,14 @@ stack1		times 256	db	0
 stack2		times 256	db	0
 stack3		times 256	db	0
 
-ivt8_offset	dw	0
+ivt8_offset		dw	0
 ivt8_segment	dw	0
+
+t0_line0	dw	0x0F00, 0x0F00, 0x0F58
+t0_line1	dw	0x0F00, 0x0F58, 0x0F00
+t0_line2	dw	0x0F58, 0x0F00, 0x0F00
+
+image_t0		dw	t0_line0, t0_line1, t0_line2
 
 ; video memory starting points.
 video_t0				dw	CpR + 0*(CpR*2), CpR + 1*(CpR*2),  CpR + 2*(CpR*2),  CpR + 3*(CpR*2),  CpR + 4*(CpR*2),  CpR + 5*(CpR*2), CpR + 6*(CpR*2),  CpR + 7*(CpR*2)
@@ -439,3 +576,10 @@ push_count				dw  0 ; checker for stack underflow
 ; string literals
 str_reset_prompt 		db	13, 10, "Stack Underflow >:(", 13, 10, "Try something different...", 13, 10, 0
 str_prompt				db	"RPN Calculator, now ported to DOS!", 13, 10,"Input your equation.", 13, 10, 0
+
+
+; set the x,y you want to print to
+; .top
+; print image
+; change x, y
+; jump to top
