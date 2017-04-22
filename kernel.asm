@@ -134,7 +134,7 @@ task0:
 	mov		[es:bx], ax
 	
 	mov		si, image_t0	; the image to display on the screen
-	mov		cx, 6			; display x coord
+	mov		cx, -1			; display x coord
 	mov		di, 6			; display y coord
 	mov		ax, 3			; image hieght
 	mov		dx, 3			; image width
@@ -214,10 +214,12 @@ clear_section:
 	pop		es
 	ret
 	
-start_x	equ	-2
-start_y	equ	-4
-x_dif	equ	-6
-y_dif	equ	-8
+start_x		equ	-2
+start_y		equ	-4
+x_dif		equ	-6
+y_dif		equ	-8
+start_x2	equ	-10
+start_y2	equ	-12
 	
 ; bx is the screen to print to
 ; si is the image to print
@@ -226,19 +228,21 @@ y_dif	equ	-8
 ; ax is the image hieght
 ; bx is the image width
 draw_image:
-	; clear the screen
 	push	cx ;x
 	push	di ;y
 	push	ax ;hieght
 	push	dx ;width
 	push	bx ;screen
 	push	bp 
+	
+	mov		bp, sp
+	
 	push	word 0 ;start x
 	push	word 0 ;start y
 	push	word 0 ;x dif
 	push	word 0 ;y dif
-	
-	mov		bp, sp
+	push	word 0 ;start x times 2
+	push	word 0 ;start y times 2
 	
 	; makes background black
 	call	clear_section
@@ -252,8 +256,10 @@ draw_image:
 ; check negitive x
 	cmp		cx, 0
 	jnle	.non_neg_x
-	neg		cx
 	mov		[bp + start_x], cx
+	neg		cx
+	imul	cx, 2
+	mov		[bp + start_x2], cx
 	mov		cx, 0
 	
 .non_neg_x:
@@ -261,8 +267,10 @@ draw_image:
 ; check negitive y
 	cmp		di, 0
 	jnle	.non_neg_y
-	neg		di
 	mov		[bp + start_y], di
+	neg		di
+	imul	di, 2
+	mov		[bp + start_y2], di
 	mov		di, 0
 	
 .non_neg_y:
@@ -280,6 +288,7 @@ draw_image:
 	sub		word [bp + y_dif], 8
 	sub		dx, [bp + y_dif]
 .goody:
+
 	; video memory is 2 bytes per slot so multiplying x and y by 2
 	imul	cx, 2
 	imul	di, 2
@@ -292,8 +301,15 @@ draw_image:
 	; set di to the hieght variable
 	mov		di, ax
 	
+	; change hieght and width
+	add		di, [bp + start_y]
+	add		dx, [bp + start_x]
+	
+	add		si, [bp + start_y2] ; starts drawing at start_y2 below the top of the image
+	
 .top:
 	mov		ax, [si]
+	add		ax, [bp + start_x2]	; start the line at start_x2 to the right of the begining of the image
 	call	print_line
 	
 	add		bx, 160		;new line in memory
@@ -302,7 +318,7 @@ draw_image:
 	cmp		di, 0
 	jg		.top
 	
-	add		sp, 8
+	add		sp, 12
 	pop		bp
 	pop		bx ;screen
 	pop		dx ;hieght
