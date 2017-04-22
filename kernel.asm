@@ -134,10 +134,10 @@ task0:
 	mov		[es:bx], ax
 	
 	mov		si, image_t0	; the image to display on the screen
-	mov		cx, 5			; display x coord
-	mov		di, 5			; display y coord
-	mov		ax, 2			; image hieght
-	mov		dx, 2			; image width
+	mov		cx, 6			; display x coord
+	mov		di, 6			; display y coord
+	mov		ax, 3			; image hieght
+	mov		dx, 3			; image width
 	mov		bx, video_t0	; screen to display the image on
 	call	draw_image
 	jmp		task0
@@ -214,6 +214,11 @@ clear_section:
 	pop		es
 	ret
 	
+start_x	equ	-2
+start_y	equ	-4
+x_dif	equ	-6
+y_dif	equ	-8
+	
 ; bx is the screen to print to
 ; si is the image to print
 ; cx is x to print at
@@ -227,10 +232,54 @@ draw_image:
 	push	ax ;hieght
 	push	dx ;width
 	push	bx ;screen
+	push	bp 
+	push	word 0 ;start x
+	push	word 0 ;start y
+	push	word 0 ;x dif
+	push	word 0 ;y dif
+	
+	mov		bp, sp
 	
 	; makes background black
 	call	clear_section
 	
+	mov		[bp + x_dif], cx
+	add		[bp + x_dif], dx
+	
+	mov		[bp + y_dif], di
+	add		[bp + y_dif], ax
+	
+; check negitive x
+	cmp		cx, 0
+	jnle	.non_neg_x
+	neg		cx
+	mov		[bp + start_x], cx
+	mov		cx, 0
+	
+.non_neg_x:
+	
+; check negitive y
+	cmp		di, 0
+	jnle	.non_neg_y
+	neg		di
+	mov		[bp + start_y], di
+	mov		di, 0
+	
+.non_neg_y:
+	
+; check if x + width is greater than 40
+	cmp		word [bp + x_dif], 40
+	jle		.goodx
+	sub		word [bp + x_dif], 40
+	sub		ax, [bp + x_dif]
+.goodx:
+
+; check if y + height is greater than 8
+	cmp		word [bp + y_dif], 8
+	jle		.goody
+	sub		word [bp + y_dif], 8
+	sub		dx, [bp + y_dif]
+.goody:
 	; video memory is 2 bytes per slot so multiplying x and y by 2
 	imul	cx, 2
 	imul	di, 2
@@ -249,10 +298,12 @@ draw_image:
 	
 	add		bx, 160		;new line in memory
 	add		si, 2		;new line image
-	dec		di
+	dec		di			;decrement the count
 	cmp		di, 0
-	jne		.top
+	jg		.top
 	
+	add		sp, 8
+	pop		bp
 	pop		bx ;screen
 	pop		dx ;hieght
 	pop		ax ;width
@@ -278,11 +329,11 @@ print_line:
 	mov		ax, [si]
 	mov		[es:bx], ax
 	
-	add		si, 2
-	add		bx, 2
-	dec		dx
+	add		si, 2	; next printable word
+	add		bx, 2	; next spot to print in
+	dec		dx		; decrement the count
 	cmp		dx, 0
-	jne		.top
+	jg		.top
 	
 	pop		es
 	pop		ax
@@ -581,10 +632,3 @@ push_count				dw  0 ; checker for stack underflow
 ; string literals
 str_reset_prompt 		db	13, 10, "Stack Underflow >:(", 13, 10, "Try something different...", 13, 10, 0
 str_prompt				db	"RPN Calculator, now ported to DOS!", 13, 10,"Input your equation.", 13, 10, 0
-
-
-; set the x,y you want to print to
-; .top
-; print image
-; change x, y
-; jump to top
