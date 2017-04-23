@@ -163,7 +163,7 @@ task1:
 	call	draw_image
 	
 	inc		cx				; display x coord move right
-	cmp		cx, 40
+	cmp		cx, 39
 	jle		.no_reset
 	mov		cx, -20
 .no_reset:
